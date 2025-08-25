@@ -1,0 +1,63 @@
+name: Alpha Update (with AI summary)
+
+permissions:
+  contents: write
+  issues: write
+  models: read
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 2" # Every Tuesday at 00:00 UTC
+
+jobs:
+  alpha-update:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Configure Git
+        run: |
+          git config --local user.name  "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Kubebuilder (build from PR #5040)
+        run: |
+          git clone --depth 1 https://github.com/kubernetes-sigs/kubebuilder.git /tmp/kubebuilder
+          cd /tmp/kubebuilder
+          gh pr checkout 5050 --repo kubernetes-sigs/kubebuilder
+          make build
+          sudo cp bin/kubebuilder /usr/local/bin/
+          kubebuilder version
+
+      - name: Install/upgrade gh-models extension
+        run: |
+          gh extension install github/gh-models --force
+          gh models --help >/dev/null
+
+      - name: List available models
+        run: gh models list
+
+      - name: Run kubebuilder alpha update
+        id: run_update
+        run: |
+          kubebuilder alpha update \
+            --force \
+            --restore-path .github/workflows \
+            --push \
+            --from-version v4.4.0 \
+            --use-gh-models \
+            --open-gh-issue
