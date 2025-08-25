@@ -58,6 +58,6 @@ jobs:
             --force \
             --restore-path .github/workflows \
             --push \
-            --from-version v4.4.0 \
+            --from-version v4.5.0 \
             --use-gh-models \
             --open-gh-issue
