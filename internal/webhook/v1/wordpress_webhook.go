@@ -18,12 +18,9 @@ package v1
 
 import (
 	"context"
-	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	examplecomv1 "github/camilamacedo86/test-operator/api/v1"
@@ -35,7 +32,7 @@ var wordpresslog = logf.Log.WithName("wordpress-resource")
 
 // SetupWordpressWebhookWithManager registers the webhook for Wordpress in the manager.
 func SetupWordpressWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&examplecomv1.Wordpress{}).
+	return ctrl.NewWebhookManagedBy(mgr, &examplecomv1.Wordpress{}).
 		WithValidator(&WordpressCustomValidator{}).
 		WithDefaulter(&WordpressCustomDefaulter{}).
 		Complete()
@@ -54,16 +51,9 @@ type WordpressCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &WordpressCustomDefaulter{}
-
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Wordpress.
-func (d *WordpressCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	wordpress, ok := obj.(*examplecomv1.Wordpress)
-
-	if !ok {
-		return fmt.Errorf("expected an Wordpress object but got %T", obj)
-	}
-	wordpresslog.Info("Defaulting for Wordpress", "name", wordpress.GetName())
+func (d *WordpressCustomDefaulter) Default(_ context.Context, obj *examplecomv1.Wordpress) error {
+	wordpresslog.Info("Defaulting for Wordpress", "name", obj.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -83,15 +73,9 @@ type WordpressCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &WordpressCustomValidator{}
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Wordpress.
-func (v *WordpressCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	wordpress, ok := obj.(*examplecomv1.Wordpress)
-	if !ok {
-		return nil, fmt.Errorf("expected a Wordpress object but got %T", obj)
-	}
-	wordpresslog.Info("Validation for Wordpress upon creation", "name", wordpress.GetName())
+func (v *WordpressCustomValidator) ValidateCreate(_ context.Context, obj *examplecomv1.Wordpress) (admission.Warnings, error) {
+	wordpresslog.Info("Validation for Wordpress upon creation", "name", obj.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
@@ -99,12 +83,8 @@ func (v *WordpressCustomValidator) ValidateCreate(_ context.Context, obj runtime
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Wordpress.
-func (v *WordpressCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	wordpress, ok := newObj.(*examplecomv1.Wordpress)
-	if !ok {
-		return nil, fmt.Errorf("expected a Wordpress object for the newObj but got %T", newObj)
-	}
-	wordpresslog.Info("Validation for Wordpress upon update", "name", wordpress.GetName())
+func (v *WordpressCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj *examplecomv1.Wordpress) (admission.Warnings, error) {
+	wordpresslog.Info("Validation for Wordpress upon update", "name", newObj.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
@@ -112,12 +92,8 @@ func (v *WordpressCustomValidator) ValidateUpdate(_ context.Context, oldObj, new
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Wordpress.
-func (v *WordpressCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	wordpress, ok := obj.(*examplecomv1.Wordpress)
-	if !ok {
-		return nil, fmt.Errorf("expected a Wordpress object but got %T", obj)
-	}
-	wordpresslog.Info("Validation for Wordpress upon deletion", "name", wordpress.GetName())
+func (v *WordpressCustomValidator) ValidateDelete(_ context.Context, obj *examplecomv1.Wordpress) (admission.Warnings, error) {
+	wordpresslog.Info("Validation for Wordpress upon deletion", "name", obj.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 
